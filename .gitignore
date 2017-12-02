@@ -1,0 +1,8 @@
+.idea/
+temp/
+.idea/
+conf/database.php
+conf/master.php
+conf/slave.php
+vendor/
+src/

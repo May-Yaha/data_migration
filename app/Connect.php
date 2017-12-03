@@ -9,15 +9,18 @@
 namespace App;
 
 use Medoo\Medoo;
+use App\File;
 
 class Connect
 {
     private static $connect;
     private static $db;
     private static $server;
+    private static $file;
 
     private function __construct()
     {
+        self::$file = new File();
         self::$db = new Medoo(self::$server);
     }
 
@@ -54,42 +57,90 @@ class Connect
 
     public function backup()
     {
-        $max = getReadSize(max);
-        $min = getReadSize(min);
-
-        $row = self::$db->get(getTable("read_name"), "id", ["ORDER" => ["id" => "DESC"]]);
-
-        $tables = $this->export_frame();
-
-        foreach ($tables as $k => $v) {
-            $arr[$k]["table_name"] = $v[0];
-        }
-
-        echo json_encode($arr);
-        file_put_contents("./temp/tables.bin", json_encode($arr));
-
-
-        for ($i = 0; $min <= $row; $i++) {
-            $min = $i * $max;
-            $res = self::$db->select(getTable("read_name"), "*", [
-                "LIMIT" => [$min, $max]
-            ]);
-            $str = json_encode($res) . PHP_EOL;
-
-            file_put_contents(getFile("path") . getFile("backup_name"), $str, FILE_APPEND);
-        }
+        $this->getTables();
+        $this->getExpFrame(self::$file->getTables());
+        $this->getData(self::$file->getTables());
     }
 
-    public function export_frame()
+    public function synchronize()
+    {
+        $this->setExpFrame();
+        $this->setData(self::$file->getTables());
+    }
+
+    /**
+     * 同步表名
+     */
+    private function getTables()
     {
         $sql = "SHOW TABLES ;";
         $res = self::$db->query($sql)->fetchAll();
-        return $res;
+
+        foreach ($res as $k => $v) {
+            $arr[$k]["table_name"] = $v[0];
+        }
+
+        self::$file->setTables($arr);
     }
 
-    public function insert($data)
+    /**
+     * 同步表结构
+     * @return array
+     */
+    private function getExpFrame($tables)
     {
+        foreach ($tables as $value) {
+            $sql = "show create table " . $value["table_name"] . ";";
+            $res = self::$db->query($sql)->fetchAll();
+            self::$file->setExportFrame($res);
+        }
+    }
 
-        self::$db->insert(getTable("write_name"), $data);
+    private function setExpFrame()
+    {
+        $res = self::$db->query(self::$file->getExportFrame())->fetchAll();
+    }
+
+
+    /**
+     * 同步数据
+     */
+    private function getData($tables)
+    {
+        foreach ($tables as $value) {
+            $min = getReadSize("min");
+            $max = getReadSize("max");
+            $row = self::$db->get($value["table_name"], "id", ["ORDER" => ["id" => "DESC"]]);
+            for ($i = 0; $min < $row; $i++) {
+                $min = $i * $max;
+                $res = self::$db->select($value["table_name"], "*", [
+                    "LIMIT" => [$min, $max]
+                ]);
+                $str = json_encode($res) . PHP_EOL;
+                self::$file->setData($str, $value["table_name"]);
+            }
+        }
+    }
+
+
+    private function setData($tables)
+    {
+        foreach ($tables as $value) {
+            $filename = getFile("table_path") . $value["table_name"] . ".bin";
+            if (is_file($filename)) {
+                $data = self::$file->getData($filename);
+                self::$db->debug()->insert($value["table_name"], $data);
+            }
+        }
+    }
+
+    /**
+     * @param $table
+     * @param $data
+     */
+
+    public function insert($table, $data)
+    {
+        $res = self::$db->insert($table, $data);
     }
 }

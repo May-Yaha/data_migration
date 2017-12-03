@@ -15,8 +15,8 @@ use App\Connect;
 use App\File;
 
 
-//run("synchronize");
-run();
+run("synchronize");
+//run();
 /**
  * @param string $option backup or synchronize
  */
@@ -41,7 +41,7 @@ function backup()
     $last_time = explode(" ", microtime());
 
     $connect = Connect::getConnect("master");
-    $connect -> backup();
+    $connect->backup();
 
     $end_time = explode(" ", microtime());
 
@@ -53,7 +53,9 @@ function synchronize()
     $last_time = explode(" ", microtime());
 
     $file = new File();
-    $file->readFile(getFile("path") . "2017112907_back.bin");
+
+    $connect = Connect::getConnect("slave");
+    $connect->synchronize();
 
     $end_time = explode(" ", microtime());
     echo round($end_time[0] + $end_time[1] - ($last_time[0] + $last_time[1]), 5) . " S";

@@ -6,3 +6,5 @@ conf/master.php
 conf/slave.php
 vendor/
 src/
+LICENSE.md
+.gitattributes

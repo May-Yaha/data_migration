@@ -12,8 +12,6 @@ require __DIR__ . "/getConf.php";
 define("DIR_ROOT", __DIR__);
 
 use App\Connect;
-use App\File;
-
 
 run("synchronize");
 //run();
@@ -51,8 +49,6 @@ function backup()
 function synchronize()
 {
     $last_time = explode(" ", microtime());
-
-    $file = new File();
 
     $connect = Connect::getConnect("slave");
     $connect->synchronize();

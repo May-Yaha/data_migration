@@ -42,8 +42,6 @@ class Connect
             self::$server = $server;
         }
 
-//        var_dump(self::$server);
-
         if (self::$connect) {
             return self::$connect;
         }
@@ -57,15 +55,22 @@ class Connect
 
     public function backup()
     {
+        echo "获取表名..." . PHP_EOL;
         $this->getTables();
+        echo "完成" . PHP_EOL . "获取表结构..." . PHP_EOL;
         $this->getExpFrame(self::$file->getTables());
+        echo "完成" . PHP_EOL . "获取数据..." . PHP_EOL;
         $this->getData(self::$file->getTables());
+        echo "获取数据完成，请执行下一步操作";
     }
 
     public function synchronize()
     {
+        echo "同步表结构..." . PHP_EOL;
         $this->setExpFrame();
+        echo "完成" . PHP_EOL . "同步数据..." . PHP_EOL;
         $this->setData(self::$file->getTables());
+        echo "同步数据成功！";
     }
 
     /**
@@ -79,7 +84,6 @@ class Connect
         foreach ($res as $k => $v) {
             $arr[$k]["table_name"] = $v[0];
         }
-
         self::$file->setTables($arr);
     }
 
@@ -98,7 +102,7 @@ class Connect
 
     private function setExpFrame()
     {
-        $res = self::$db->query(self::$file->getExportFrame())->fetchAll();
+        self::$db->query(self::$file->getExportFrame())->fetchAll();
     }
 
 
@@ -110,8 +114,9 @@ class Connect
         foreach ($tables as $value) {
             $min = getReadSize("min");
             $max = getReadSize("max");
-            $row = self::$db->get($value["table_name"], "id", ["ORDER" => ["id" => "DESC"]]);
-            for ($i = 0; $min < $row; $i++) {
+            $row = self::$db->count($value["table_name"], "id");
+
+            for ($i = 1; $min <= $row; $i++) {
                 $min = $i * $max;
                 $res = self::$db->select($value["table_name"], "*", [
                     "LIMIT" => [$min, $max]
@@ -122,25 +127,17 @@ class Connect
         }
     }
 
-
     private function setData($tables)
     {
         foreach ($tables as $value) {
             $filename = getFile("table_path") . $value["table_name"] . ".bin";
             if (is_file($filename)) {
-                $data = self::$file->getData($filename);
-                self::$db->debug()->insert($value["table_name"], $data);
+                echo $value["table_name"] . PHP_EOL;
+
+                foreach (self::$file->getData($filename) as $val){
+                    self::$db->insert($value["table_name"], json_decode($val,true));
+                }
             }
         }
-    }
-
-    /**
-     * @param $table
-     * @param $data
-     */
-
-    public function insert($table, $data)
-    {
-        $res = self::$db->insert($table, $data);
     }
 }

@@ -12,17 +12,6 @@ use App\Connect;
 
 class File
 {
-    private static $connect;
-
-    /**
-     * 创建临时文件
-     */
-
-    public function __construct()
-    {
-//        self::$connect = Connect::getConnect("slave");
-    }
-
     /**
      *生成表名二进制文件
      */
@@ -74,42 +63,25 @@ class File
         file_put_contents(getFile("table_path") . $filename . ".bin", $data, FILE_APPEND);
     }
 
+    /**
+     * @param $filename
+     * @return mixed
+     * 获取数据
+     */
     public function getData($filename)
     {
-        $file = fopen($filename, "r+");
-        $data ="";
-
-        while (!feof($file)) {
-            $str = fgets($file);
-            $data = json_decode($str, true);
+        $fp = fopen($filename, "r") or die("File not found!");
+        while (!feof($fp)){
+            yield fgets($fp);
         }
-        fclose($file);
-        var_dump($data);
-        return $data;
+        fclose($fp);
     }
 
     /**
-     * 读取临时文件
-     *
-     * public function readFile($filename)
-     * {
-     * $file = fopen($filename, "r+");
-     *
-     * $table_name = $this->getTables();
-     * foreach ($table_name as $key => $value) {
-     * while (!feof($file)) {
-     * $data = fgets($file);
-     * $data = json_decode($data, true);
-     *
-     * //                echo $value["table_name"].PHP_EOL;
-     * self::$connect->insert($value["table_name"], $data);
-     * }
-     * }
-     * fclose($file);
-     * }
+     * @param $filename
+     * @return bool|string
+     * 读取文件
      */
-
-
     public function readFile($filename)
     {
         $table_file = fopen($filename, "r") or die("Unable to open file!");

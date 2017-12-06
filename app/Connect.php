@@ -79,7 +79,11 @@ class Connect
     private function getTables()
     {
         $sql = "SHOW TABLES ;";
-        $res = self::$db->query($sql)->fetchAll();
+        try{
+            $res = self::$db->query($sql)->fetchAll();
+        }catch (\PDOException $exception){
+            echo "PDO Error：".$exception->getMessage();
+        }
 
         foreach ($res as $k => $v) {
             $arr[$k]["table_name"] = $v[0];
@@ -95,14 +99,23 @@ class Connect
     {
         foreach ($tables as $value) {
             $sql = "show create table " . $value["table_name"] . ";";
-            $res = self::$db->query($sql)->fetchAll();
+
+            try{
+                $res = self::$db->query($sql)->fetchAll();
+            }catch (\PDOException $exception){
+                echo "PDO Error：".$exception->getMessage();
+            }
             self::$file->setExportFrame($res);
         }
     }
 
     private function setExpFrame()
     {
-        self::$db->query(self::$file->getExportFrame())->fetchAll();
+        try{
+            self::$db->query(self::$file->getExportFrame())->fetchAll();
+        }catch (\PDOException $exception){
+            echo "PDO Error：".$exception->getMessage();
+        }
     }
 
 

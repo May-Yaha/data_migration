@@ -8,14 +8,11 @@
 
 namespace App;
 
-use App\Connect;
-
 class File
 {
     /**
      *生成表名二进制文件
      */
-
     public function setTables($table)
     {
         file_put_contents(getFile("path") . getFile("tables_name"), json_encode($table));
@@ -58,7 +55,7 @@ class File
      * 同步数据
      * @param $data
      */
-    public function setData($data, $filename)
+    public function setData($data,$filename)
     {
         file_put_contents(getFile("table_path") . $filename . ".bin", $data, FILE_APPEND);
     }

@@ -13,8 +13,8 @@ define("DIR_ROOT", __DIR__);
 
 use App\Connect;
 
-run("synchronize");
-//run();
+//run("synchronize");
+run();
 /**
  * @param string $option backup or synchronize
  */
